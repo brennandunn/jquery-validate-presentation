@@ -6,13 +6,28 @@
     $(this).each(function(){
       var methods = _.compact(($(this).attr('data-validate') || '').split(' '));
       _.each(methods, function(method){
-        $.fn.validate.rules[method]($(this).val());
+        results.push(
+          $.fn.validate.rules[method]($(this).val())
+        );
       })
     })
     
-    return _.isEmpty(_.compact(results));
+    return _.compact(results);
   }
   
-  $.fn.validate.rules = {}
+  $.extend($.fn.validate, {
+    
+    rules: {
+      required: function(v) { return v.replace(/\s/g,"") == "" ? 'requires a value' : null },
+      over: function(v,age) { return parseInt(v) < parseInt(age) ? 'must be over '+age : null },
+      numeric: function(v) { return !v.match(/\d+/) ? 'must be a number' : null }
+    },
+    
+    applyRule: function(ruleName, value) {
+      match = /(\w+)(\((.+)\))?/.exec(ruleName);
+      return this.rules[match[1]](value, match[3]);
+    }
+    
+  });
   
 })(jQuery);
