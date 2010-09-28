@@ -4,6 +4,13 @@
     var results = [];
     
     $(this).each(function(){
+      if ($(this).is('form')) {
+        $(this).submit(function(e){
+          e.preventDefault();
+          $.fn.validate.checkForm(this, options);
+        });
+      }
+      
       var methods = _.compact(($(this).attr('data-validate') || '').split(' '));
       _.each(methods, function(method){
         results.push(
@@ -26,6 +33,11 @@
     applyRule: function(ruleName, value) {
       match = /(\w+)(\((.+)\))?/.exec(ruleName);
       return this.rules[match[1]](value, match[3]);
+    },
+    
+    checkForm: function(form, options) {
+      
+      return options['beforeSubmit'] ? options['beforeSubmit']() : true;
     }
     
   });

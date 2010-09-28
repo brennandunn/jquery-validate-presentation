@@ -1,8 +1,9 @@
 require('/jquery.js');
 require('/underscore.js');
+require('/ejs.js');
 require('/validate.js');
 
-describe('Validating forms', function(){
+describe('Validating inputs', function(){
   
   it('exposes a function validate() to jQuery', function(){
     expect($.fn.validate).toBeDefined();
@@ -31,10 +32,17 @@ describe('Validating forms', function(){
       expect($.fn.validate.rules['valid']).toHaveBeenCalledWith('');
     })
     
-    it('should return messages if invalid', function(){
+    it('should return a message if invalid', function(){
       field.attr('data-validate', 'fake');
       $.fn.validate.rules.fake = function() { return 'You fail' }
       expect(field.validate()).toEqual(['You fail'])
+    })
+    
+    it('stacks messages if multiple validations fail', function(){
+      field.attr('data-validate', 'fake1 fake2');
+      $.fn.validate.rules.fake1 = function() { return 'You fail' }
+      $.fn.validate.rules.fake2 = function() { return 'You fail again' }
+      expect(field.validate()).toEqual(['You fail', 'You fail again']);
     })
 
   })
@@ -76,6 +84,28 @@ describe('Validating forms', function(){
       it('tests "numeric" for a number', function(){
         expect($.fn.validate.applyRule('numeric', 'abc')).toEqual('must be a number');
         expect($.fn.validate.applyRule('numeric', '123')).toBeFalsy();
+      })
+      
+    })
+    
+  })
+  
+  describe('when applied to a form', function(){
+    template('form.html')
+    
+    describe('observing the form submit', function(){
+      
+      beforeEach(function(){
+        clearLiveEventBindings();
+        $('form').validate({
+          beforeSubmit: function(){ return false }
+        });
+      })
+      
+      it('triggers validate() when submitted', function(){
+        spyOn($.fn.validate, 'checkForm');
+        $('form').submit();
+        expect($.fn.validate.checkForm).toHaveBeenCalled();
       })
       
     })
